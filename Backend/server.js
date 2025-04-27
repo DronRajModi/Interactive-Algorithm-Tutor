@@ -1,64 +1,49 @@
 const express = require('express');
 const { spawn } = require('child_process');
 const cors = require('cors');
-const path = require('path');
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
 app.use(cors());
+app.use(express.json());
 
-const ALGO_DIR = path.join(__dirname, 'algorithms');
+app.post('/start-sort', (req, res) => {
+    const { algorithm } = req.body;
 
-function spawnAlgorithm(exeName) {
-  const cmd =
-    process.platform === 'win32'
-      ? `${exeName}.exe`
-      : `./${exeName}`;
-  return spawn(cmd, [], { cwd: ALGO_DIR });
-}
+    const cppProcess = spawn('./sorting_app.exe'); // compiled C++ exe name
 
-function sseHandler(executableName) {
-  return (req, res) => {
-    const cppProcess = spawnAlgorithm(executableName);
+    // Send the choice number to C++ program
+    cppProcess.stdin.write(`${algorithm}\n`);
 
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.flushHeaders();
+    // Stream data
+    cppProcess.stdout.setEncoding('utf-8');
 
-    cppProcess.stdout.on('data', (chunk) => {
-      chunk.toString().split(/\r?\n/).forEach((line) => {
-        if (line.trim()) {
-          res.write(`data: ${line.trim()}\n\n`);
-        }
-      });
+    cppProcess.stdout.on('data', (data) => {
+        // Split multiple JSON objects if they come together
+        const steps = data.split('\n').filter(Boolean).map(line => JSON.parse(line));
+        steps.forEach(step => {
+            res.write(`data: ${JSON.stringify(step)}\n\n`);
+        });
     });
 
     cppProcess.stderr.on('data', (data) => {
-      console.error(`[${executableName}] stderr: ${data}`);
+        console.error(`stderr: ${data}`);
     });
 
     cppProcess.on('close', (code) => {
-      res.write(`event: end\ndata: ${executableName} complete\n\n`);
-      res.end();
+        res.end();
+        console.log(`child process exited with code ${code}`);
     });
-  };
-}
+});
 
-// Existing endpoints
-app.get('/run-merge-sort',    sseHandler('mergeSort'));
-app.get('/run-quick-sort',    sseHandler('quickSort'));
-
-// New endpoints for all sorts
-app.get('/run-bubble-sort',    sseHandler('bubbleSort'));
-app.get('/run-selection-sort', sseHandler('selectionSort'));
-app.get('/run-insertion-sort', sseHandler('insertionSort'));
-app.get('/run-heap-sort',      sseHandler('heapSort'));
-app.get('/run-counting-sort',  sseHandler('countingSort'));
-app.get('/run-radix-sort',     sseHandler('radixSort'));
-app.get('/run-bucket-sort',    sseHandler('bucketSort'));
+// Use SSE (Server Sent Events)
+app.get('/events', (req, res) => {
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+});
 
 app.listen(PORT, () => {
-  console.log(`🚀 Server listening at http://localhost:${PORT}`);
+    console.log(`Server running on port ${PORT}`);
 });

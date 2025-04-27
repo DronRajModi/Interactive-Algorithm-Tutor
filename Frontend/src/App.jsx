@@ -1,12 +1,16 @@
-// frontend/src/App.jsx
-
+import { useState } from 'react';
 import Visualizer from './components/Visualizer';
+import Sidebar from './components/Sidebar';
 
 export default function App() {
+  const [selectedAlgorithm, setSelectedAlgorithm] = useState('');
+
   return (
-    <div className="min-h-screen bg-white text-center py-10">
-      <h1 className="text-2xl font-bold mb-4">Merge Sort Visualizer (C++)</h1>
-      <Visualizer />
+    <div className="flex min-h-screen bg-white">
+      <Sidebar onAlgorithmSelect={setSelectedAlgorithm} />
+      <div className="flex-1 p-4">
+        <Visualizer selectedAlgorithm={selectedAlgorithm} />
+      </div>
     </div>
   );
 }

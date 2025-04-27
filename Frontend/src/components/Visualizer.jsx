@@ -1,70 +1,80 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 
-export default function Visualizer() {
-  const [array, setArray] = useState([]);
-  const [segments, setSegments] = useState(null);
-  const [highlighted, setHighlighted] = useState([]);
+export default function Visualizer({ selectedAlgorithm }) {
+  const [history, setHistory] = useState([]);
   const [logs, setLogs] = useState([]);
   const [running, setRunning] = useState(false);
-  const [sortingAlgorithm, setSortingAlgorithm] = useState('');
-  const [currentStep, setCurrentStep] = useState('');
+  const [speed, setSpeed] = useState(300);
+  const esRef = useRef(null);
+
+  const colors = [
+    "bg-red-400", "bg-blue-400", "bg-green-400", 
+    "bg-yellow-400", "bg-purple-400", "bg-pink-400", "bg-orange-400",
+    "bg-teal-400", "bg-indigo-400"
+  ];
+
+  useEffect(() => {
+    if (selectedAlgorithm) {
+      startSort(selectedAlgorithm);
+    }
+    return () => {
+      if (esRef.current) esRef.current.close();
+    };
+  }, [selectedAlgorithm]);
 
   const handleStep = async (step) => {
-    // Log message
     if (step.message) {
       setLogs(prev => [...prev, step.message]);
-      setCurrentStep(step.message);
     }
-
-    // Update array state
+  
     if (step.type === 'start') {
-      setArray(step.array);
-      setSegments(null);
-      setHighlighted([]);
+      setHistory([[step.array]]);
       return;
     }
-    if (step.type === 'end') {
-      setArray(step.array);
-      setSegments(null);
-      setHighlighted([]);
-      setCurrentStep('✔ Sorting Complete');
+  
+    if (step.type === 'split' || step.type === 'merge') {
+      const splits = splitArray(step.array, step.l, step.r);
+      setHistory(prev => [...prev, splits]);
+    } 
+    
+    // NEW CODE for compare / swap
+    else if (step.type === 'compare' || step.type === 'swap') {
+      setHistory(prev => [...prev, [step.array]]);
+    }
+  
+    else if (step.type === 'end') {
+      setHistory(prev => [...prev, [step.array]]);
       setRunning(false);
       return;
     }
+  
+    await new Promise(res => setTimeout(res, speed));
+  };
+  
 
-    setArray(step.array);
-
-    // Handle segment highlights for merge/split
-    if (step.type === 'merge' || step.type === 'split') {
-      setSegments(step);
-      setHighlighted([]);
+  const splitArray = (arr, l, r) => {
+    if (l === undefined || r === undefined || l < 0 || r < 0) {
+      return [arr];
     }
-    // Highlight comparisons
-    else if (step.type === 'compare') {
-      setHighlighted([step.l, step.r].filter(idx => idx >= 0));
-      setSegments(null);
-    }
-    // Default: clear highlights/segments
-    else {
-      setHighlighted([]);
-      setSegments(null);
-    }
-
-    // Pause between steps for visibility
-    await new Promise(res => setTimeout(res, 300));
+    const left = arr.slice(0, l);
+    const middle = arr.slice(l, r + 1);
+    const right = arr.slice(r + 1);
+    const groups = [];
+    if (left.length) groups.push(left);
+    if (middle.length) groups.push(middle);
+    if (right.length) groups.push(right);
+    return groups;
   };
 
   const startSort = (algorithm) => {
     setRunning(true);
-    setSortingAlgorithm(algorithm);
     setLogs([]);
-    setArray([]);
-    setHighlighted([]);
-    setSegments(null);
-    setCurrentStep('');
+    setHistory([]);
 
     const es = new EventSource(`http://localhost:5000/run-${algorithm}`);
+    esRef.current = es;
+
     es.onmessage = async (e) => {
       const text = e.data.trim();
       if (!text.startsWith('{')) return;
@@ -78,80 +88,58 @@ export default function Visualizer() {
     es.addEventListener('end', () => es.close());
   };
 
-  const getSegmentValues = () =>
-    segments ? array.slice(segments.l, segments.r + 1) : [];
-
   return (
-    <div className="p-8 max-w-4xl mx-auto space-y-6">
-      {/* Header with algorithm buttons */}
-      <div className="flex flex-wrap justify-between items-center space-y-2">
-        <h1 className="text-3xl font-bold">Sorting Visualizer ({sortingAlgorithm})</h1>
-        <div className="flex flex-wrap gap-2">
-          {['merge-sort','quick-sort','bubble-sort','selection-sort','insertion-sort','heap-sort','counting-sort','radix-sort','bucket-sort'].map(algo => (
-            <button
-              key={algo}
-              onClick={() => startSort(algo)}
-              disabled={running}
-              className="bg-indigo-600 text-white px-4 py-2 rounded shadow disabled:opacity-50"
-            >
-              {running && sortingAlgorithm === algo
-                ? `Running ${algo.replace('-', ' ')}…`
-                : `Run ${algo.replace('-', ' ').replace(/\b\w/g, c => c.toUpperCase())}`}
-            </button>
-          ))}
-        </div>
+    <div className="p-4 w-full space-y-6">
+
+      {/* Title */}
+      <h1 className="text-2xl font-bold text-center">
+        {selectedAlgorithm ? selectedAlgorithm.replace('-', ' ').toUpperCase() : "Select an Algorithm"}
+      </h1>
+
+      {/* Speed Control */}
+      <div className="flex items-center gap-4 justify-center">
+        <label className="font-semibold">Speed:</label>
+        <input
+          type="range"
+          min="50"
+          max="1000"
+          step="50"
+          value={speed}
+          onChange={(e) => setSpeed(Number(e.target.value))}
+          className="w-64"
+        />
+        <span className="font-mono">{speed}ms</span>
       </div>
 
-      {/* Segment animation area */}
-      <div className="bg-yellow-50 p-4 rounded-xl shadow min-h-[60px] transition-all">
-        <AnimatePresence mode="wait">
-          {segments && (
-            <motion.div
-              key={`${segments.l}-${segments.r}-${segments.type}`}
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.3 }}
-              className="flex space-x-2 justify-center items-center"
-            >
-              {getSegmentValues().map((v, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ scale: 0.8 }}
-                  animate={{ scale: 1 }}
-                  className="px-3 py-1 bg-yellow-100 text-yellow-900 rounded-md font-semibold"
-                >
-                  {v}
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
+      {/* History Visualizer */}
+      <div className="bg-gray-100 p-6 rounded-2xl shadow-inner min-h-[400px] flex flex-col gap-6 items-center">
+        {history.map((step, stepIdx) => (
+          <div key={stepIdx} className="flex flex-wrap justify-center gap-4">
+            {step.map((group, groupIdx) => (
+              <div 
+                key={groupIdx} 
+                className="flex gap-2 p-2 rounded-xl border-gray-300 border-2"
+              >
+                {group.map((value, idx) => (
+                  <motion.div
+                    key={idx}
+                    layout
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-10 h-10 flex items-center justify-center bg-white rounded-md text-gray-800 font-bold text-sm shadow"
+                  >
+                    {value}
+                  </motion.div>
+                ))}
+              </div>
+            ))}
+          </div>
+        ))}
       </div>
 
-      {/* Bar chart visualization */}
-      <div className="bg-gray-100 p-6 rounded-2xl shadow-inner h-64 flex items-end gap-2">
-        {array.map((v, i) => {
-          const isHigh = highlighted.includes(i);
-          return (
-            <motion.div
-              key={i}
-              layout
-              initial={{ height: 0 }}
-              animate={{ height: `${v * 3}px` }}
-              transition={{ type: 'spring', stiffness: 100, damping: 15 }}
-              className={`flex-1 rounded relative ${isHigh ? 'bg-red-500' : 'bg-green-500'}`}
-            >
-              <span className="absolute -top-5 w-full text-center text-black text-xs font-bold">
-                {v}
-              </span>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {/* Logs panel */}
-      <div className="bg-white p-4 rounded-lg shadow max-h-48 overflow-y-auto">
+      {/* Logs */}
+      <div className="bg-white p-4 rounded-lg shadow max-h-48 overflow-y-auto text-left">
         <h2 className="text-lg font-semibold mb-2">Logs</h2>
         <ul className="font-mono text-sm space-y-1">
           {logs.map((msg, idx) => (
@@ -159,6 +147,7 @@ export default function Visualizer() {
           ))}
         </ul>
       </div>
+
     </div>
   );
 }
