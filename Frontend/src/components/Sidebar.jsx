@@ -12,9 +12,11 @@ export default function Sidebar({ onAlgorithmSelect }) {
       { name: "Bubble Sort", value: "bubble-sort" },
       { name: "Selection Sort ", value: "selection-sort" },
       { name: "Insertion Sort", value: "insertion-sort" },
-      { name: "Heap sort", value: "heap-sort" },
+     
     ],
-    "Dynamic Programming": [],
+    "Dynamic Programming": [
+      {name: "N-queen", value:"nqueen"},
+    ],
     "Backtracking": [],
     "Greedy": [],
     "Simple Recursive": [],

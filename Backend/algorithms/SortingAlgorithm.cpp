@@ -89,6 +89,123 @@ void mergeSort(vector<int>& arr, int left, int right, int depth, int position) {
     merge(arr, left, mid, right, depth, position);
 }
 
+void bubbleSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = 0; i < n - 1; ++i) {
+        for (int j = 0; j < n - i - 1; ++j) {
+            // Step: compare
+            printStep(arr, "Comparing " + to_string(arr[j]) + " and " + to_string(arr[j + 1]),
+                      1, i * n + j, "compare", -1, j, j + 1);
+
+            if (arr[j] > arr[j + 1]) {
+                swap(arr[j], arr[j + 1]);
+                // Step: swap
+                printStep(arr, "Swapping " + to_string(arr[j]) + " and " + to_string(arr[j + 1]),
+                          1, i * n + j, "swap", -1, j, j + 1);
+            } else {
+                // Step: no swap
+                printStep(arr, "No swap needed", 1, i * n + j, "no-swap", -1, j, j + 1);
+            }
+        }
+    }
+}
+
+
+void selectionSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = 0; i < n - 1; ++i) {
+        int minIdx = i;
+        for (int j = i + 1; j < n; ++j) {
+            printStep(arr, "Comparing " + to_string(arr[j]) + " with current min " + to_string(arr[minIdx]), 1, 0, "compare", -1, j, minIdx);
+            if (arr[j] < arr[minIdx]) {
+                minIdx = j;
+            }
+        }
+        if (minIdx != i) {
+            swap(arr[i], arr[minIdx]);
+            printStep(arr, "Swapping " + to_string(arr[i]) + " and " + to_string(arr[minIdx]), 1, 0, "swap", -1, i, minIdx);
+        }
+    }
+}
+
+void insertionSort(vector<int>& arr) {
+    int n = arr.size();
+    for (int i = 1; i < n; ++i) {
+        int key = arr[i];
+        int j = i - 1;
+
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            printStep(arr, "Shifting " + to_string(arr[j]) + " to right", 1, i, "shift", -1, j, j + 1);
+            j--;
+        }
+        arr[j + 1] = key;
+        printStep(arr, "Inserting " + to_string(key) + " at position " + to_string(j + 1), 1, i, "insert", -1);
+    }
+}
+
+void countingSort(vector<int>& arr, int depth, int position) {
+    int maxVal = *max_element(arr.begin(), arr.end());
+    vector<int> count(maxVal + 1, 0);
+    vector<int> output(arr.size());
+
+    for (int i = 0; i < arr.size(); i++) {
+        count[arr[i]]++;
+        printStep(arr, "Counting element " + to_string(arr[i]), depth, position, "count", -1, arr[i], -1);
+    }
+
+    for (int i = 1; i <= maxVal; i++) {
+        count[i] += count[i - 1];
+        printStep(arr, "Building prefix sum at index " + to_string(i), depth, position, "prefix", -1, i, -1);
+    }
+
+    for (int i = arr.size() - 1; i >= 0; i--) {
+        output[count[arr[i]] - 1] = arr[i];
+        count[arr[i]]--;
+        printStep(output, "Placing " + to_string(arr[i]) + " at correct position", depth, position, "place", -1, count[arr[i]], i);
+    }
+
+    arr = output;
+}
+
+int getDigit(int num, int exp) {
+    return (num / exp) % 10;
+}
+
+void radixSort(vector<int>& arr, int depth, int position) {
+    int maxVal = *max_element(arr.begin(), arr.end());
+    int exp = 1;
+
+    while (maxVal / exp > 0) {
+        vector<int> output(arr.size());
+        vector<int> count(10, 0);
+
+        for (int i = 0; i < arr.size(); i++) {
+            int digit = getDigit(arr[i], exp);
+            count[digit]++;
+            printStep(arr, to_string(arr[i]) + " has digit " + to_string(digit) + " at exp " + to_string(exp), depth, position, "digit", -1, digit, i);
+        }
+
+        for (int i = 1; i < 10; i++) {
+            count[i] += count[i - 1];
+            printStep(arr, "Building prefix sum for digit " + to_string(i), depth, position, "prefix", -1, i, -1);
+        }
+
+        for (int i = arr.size() - 1; i >= 0; i--) {
+            int digit = getDigit(arr[i], exp);
+            output[count[digit] - 1] = arr[i];
+            count[digit]--;
+            printStep(output, "Placing " + to_string(arr[i]) + " based on digit " + to_string(digit), depth, position, "place", -1, count[digit], i);
+        }
+
+        arr = output;
+        exp *= 10;
+    }
+}
+
+
+
+
 vector<int> parseInput(int argc, char* argv[], int startIndex) {
     vector<int> arr;
     for (int i = startIndex; i < argc; ++i) {
@@ -115,10 +232,17 @@ int main(int argc, char* argv[]) {
         mergeSort(arr, 0, arr.size() - 1, 1, 0);
     } else if (algorithm == "quick-sort") {
         quickSort(arr, 0, arr.size() - 1, 1, 0);
+    } else if (algorithm == "bubble-sort") {
+        bubbleSort(arr);
+    } else if (algorithm == "selection-sort") {
+        selectionSort(arr);
+    } else if (algorithm == "insertion-sort") {
+        insertionSort(arr);
+    }  else if (algorithm == "counting-sort") {
+        countingSort(arr, 1, 0);
+    } else if (algorithm == "radix-sort") {
+        radixSort(arr, 1, 0);
     } else {
-        cerr << "Unknown algorithm: " << algorithm << endl;
-        return 1;
-    }
 
     printStep(arr, "Final sorted array", 0, 0, "final");
 
