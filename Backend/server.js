@@ -1,33 +1,34 @@
 const express = require('express');
 const cors = require('cors');
 const { spawn } = require('child_process');
-const path = require('path')
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-let clients = []; // all connected EventSource clients
+let clients = []; // Connected EventSource clients
 let lastSortChoice = '';
 let userArray = [];
 
-// 1. POST request to run sorting
+// 1. POST /run-<algorithm>
 app.post('/run-:algorithm', (req, res) => {
   const { algorithm } = req.params;
   userArray = req.body.array || [];
   lastSortChoice = algorithm;
+
   console.log(`Starting sort for: ${algorithm}, userArray: ${userArray}`);
-  res.sendStatus(200);
-  
+  res.sendStatus(200); // Respond immediately
+
   startSortingProcess();
 });
 
-// 2. EventSource stream
+// 2. GET /stream — Server-Sent Events
 app.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  
+
   clients.push(res);
 
   req.on('close', () => {
@@ -35,16 +36,16 @@ app.get('/stream', (req, res) => {
   });
 });
 
-// 3. Start C++ process and stream data
+// 3. Start C++ process and stream steps
 function startSortingProcess() {
   if (!lastSortChoice) return;
 
   const args = [lastSortChoice, ...userArray];
+  console.log('Spawning with args:', args); // 
   const executablePath = path.resolve(__dirname, 'algorithms', 'SortingAlgorithm.exe');
-  const process = spawn(executablePath, args);
+  const child = spawn(executablePath, args.map(String));
 
-
-  process.stdout.on('data', (data) => {
+  child.stdout.on('data', (data) => {
     const lines = data.toString().split('\n');
     for (const line of lines) {
       if (line.trim()) {
@@ -55,8 +56,9 @@ function startSortingProcess() {
     }
   });
 
-  process.on('close', (code) => {
+  child.on('close', (code) => {
     console.log(`Child process exited with code ${code}`);
+    
     clients.forEach(client => {
       client.write('event: end\ndata: done\n\n');
       client.end();
