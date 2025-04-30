@@ -5,11 +5,10 @@ export default function Visualizer({ selectedAlgorithm }) {
   const [steps, setSteps] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [arrayInput, setArrayInput] = useState('');
-  const [speed, setSpeed] = useState(1000); // ms
+  const [speed, setSpeed] = useState(1000);
   const [isPlaying, setIsPlaying] = useState(false);
   const intervalRef = useRef(null);
 
-  // Auto playback effect
   useEffect(() => {
     if (isPlaying && currentIndex < steps.length - 1) {
       intervalRef.current = setInterval(() => {
@@ -51,6 +50,10 @@ export default function Visualizer({ selectedAlgorithm }) {
       setIsPlaying(true);
     });
   };
+
+  const currentStep = steps[currentIndex];
+
+  const isSwapping = currentStep?.action === 'swap' || currentStep?.action === 'pivot-swap';
 
   return (
     <div className="p-4 w-full space-y-6">
@@ -95,32 +98,77 @@ export default function Visualizer({ selectedAlgorithm }) {
         </button>
       </div>
 
-      {/* Visualization box */}
+      {/* Visualization Box */}
       <div className="border rounded p-6 shadow-md min-h-[200px] flex flex-col items-center justify-center">
-        <div className="space-y-6">
-          {steps.slice(0, currentIndex + 1).map((step, idx) => (
+        <AnimatePresence mode="wait">
+          {currentStep && (
             <motion.div
-              key={idx}
+              key={currentIndex}
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.4 }}
-              className="flex flex-col items-center space-y-2"
+              className="flex flex-col items-center space-y-4"
             >
-              <div className="flex flex-wrap justify-center gap-4">
-                {step.array.map((group, groupIdx) => (
-                  <div key={groupIdx} className="flex gap-1">
-                    {(Array.isArray(group) ? group : [group]).map((val, valIdx) => (
-                      <div key={valIdx} className="px-3 py-2 bg-gray-100 border rounded">
-                        {val}
+              <div className="flex flex-wrap justify-center gap-2 relative">
+                {currentStep.array.map((val, i) => {
+                  const isPivot = currentStep.pivotIndex === i;
+                  const isSwapA = currentStep.swap?.[0] === i;
+                  const isSwapB = currentStep.swap?.[1] === i;
+
+                  return (
+                    <motion.div
+                      key={i}
+                      layout
+                      className={`px-4 py-2 rounded border font-medium ${isPivot ? 'bg-blue-200 border-blue-600' : isSwapA || isSwapB ? 'bg-yellow-200 border-yellow-600' : 'bg-gray-100'
+                        }`}
+                      initial={isSwapping && (isSwapA || isSwapB) ? { y: -10 } : false}
+                      animate={isSwapping && (isSwapA || isSwapB) ? { y: 0 } : false}
+                      transition={{ duration: 0.4 }}
+                    >
+                      {val}
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {isSwapping && (
+                <div className="text-center text-2xl mt-2">↔️</div>
+              )}
+
+              <div className="text-sm text-gray-600 italic bg-blue-50 border-l-4 border-blue-400 px-4 py-2 w-full max-w-lg">
+                <strong>Step:</strong> {currentStep.message}
+              </div>
+
+              {currentStep?.action === 'final' && (
+                <div className="mt-12 border-t pt-6">
+                  <h3 className="text-xl font-semibold mb-4">Full Step History</h3>
+                  <div className="space-y-6">
+                    {steps.map((step, idx) => (
+                      <div key={idx} className="flex flex-col items-center">
+                        <div className="flex space-x-2 justify-center flex-wrap">
+                          {step.array.map((val, i) => (
+                            <div
+                              key={i}
+                              className="px-3 py-1 border rounded bg-white shadow text-sm"
+                            >
+                              {val}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-gray-500 text-xs italic mt-1 text-center max-w-sm">
+                          {step.message}
+                        </div>
                       </div>
                     ))}
                   </div>
-                ))}
-              </div>
-              <div className="text-sm text-gray-500 italic">{step.message}</div>
+                </div>
+              )}
+           
+
             </motion.div>
-          ))}
-        </div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

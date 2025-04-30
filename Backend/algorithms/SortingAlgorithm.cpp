@@ -1,12 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <string>
+#include <sstream>
+#include <algorithm>
 
 using namespace std;
 
-int stepCount = 0;
-
-void printStep(const vector<int>& arr, const string& message, int depth, int position, const string& action) {
+void printStep(const vector<int>& arr, const string& message, int depth, int position, const string& action, int pivotIndex = -1, int swapA = -1, int swapB = -1) {
     cout << "{";
     cout << "\"array\": [";
     for (size_t i = 0; i < arr.size(); ++i) {
@@ -17,8 +17,41 @@ void printStep(const vector<int>& arr, const string& message, int depth, int pos
     cout << "\"message\": \"" << message << "\", ";
     cout << "\"depth\": " << depth << ", ";
     cout << "\"position\": " << position << ", ";
-    cout << "\"action\": \"" << action << "\"";
+    cout << "\"action\": \"" << action << "\", ";
+    cout << "\"pivotIndex\": " << pivotIndex << ", ";
+    cout << "\"swap\": [" << swapA << ", " << swapB << "]";
     cout << "}" << endl;
+}
+
+void quickSort(vector<int>& arr, int low, int high, int depth, int position) {
+    if (low >= high) {
+        if (low == high) {
+            printStep(arr, "Single element, no need to sort", depth, position, "base");
+        }
+        return;
+    }
+
+    int pivot = arr[high];
+    int i = low - 1;
+
+    printStep(arr, "Selecting pivot " + to_string(pivot) + " at index " + to_string(high), depth, position, "pivot", high);
+
+    for (int j = low; j < high; ++j) {
+        if (arr[j] <= pivot) {
+            ++i;
+            if (i != j) {
+                swap(arr[i], arr[j]);
+                printStep(arr, "Swapping " + to_string(arr[i]) + " and " + to_string(arr[j]), depth, position, "swap", high, i, j);
+            }
+        }
+    }
+
+    swap(arr[i + 1], arr[high]);
+    printStep(arr, "Placing pivot at correct position", depth, position, "pivot-swap", i + 1, high);
+
+    int pivotIndex = i + 1;
+    quickSort(arr, low, pivotIndex - 1, depth + 1, position * 2);
+    quickSort(arr, pivotIndex + 1, high, depth + 1, position * 2 + 1);
 }
 
 void merge(vector<int>& arr, int left, int mid, int right, int depth, int position) {
@@ -80,6 +113,8 @@ int main(int argc, char* argv[]) {
 
     if (algorithm == "merge-sort") {
         mergeSort(arr, 0, arr.size() - 1, 1, 0);
+    } else if (algorithm == "quick-sort") {
+        quickSort(arr, 0, arr.size() - 1, 1, 0);
     } else {
         cerr << "Unknown algorithm: " << algorithm << endl;
         return 1;
