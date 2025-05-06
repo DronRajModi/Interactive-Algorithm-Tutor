@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-export default function Sidebar({ onAlgorithmSelect }) {
+export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
   const [openCategory, setOpenCategory] = useState(null);
 
   const categories = {
@@ -10,24 +10,30 @@ export default function Sidebar({ onAlgorithmSelect }) {
       { name: "Counting Sort", value: "counting-sort" },
       { name: "Radix Sort", value: "radix-sort" },
       { name: "Bubble Sort", value: "bubble-sort" },
-      { name: "Selection Sort ", value: "selection-sort" },
+      { name: "Selection Sort", value: "selection-sort" },
       { name: "Insertion Sort", value: "insertion-sort" },
-     
     ],
     "Dynamic Programming": [
-      {name: "N-queen", value:"nqueen"},
+      { name: "Knapsack", value: "dp-knapsack" },
+      { name: "Fibonacci", value: "dp-fibonacci" },
     ],
-    "Backtracking": [],
-    "Greedy": [],
-    "Simple Recursive": [],
-    "Branch and Bound": [],
-    "Brute Force": [],
+    "Backtracking": [
+      { name: "N-Queen", value: "nqueen" },
+    ],
+    "Greedy": [
+      { name: "Dijkstra's Algorithm", value: "dijkstra" },
+      { name: "Prim's Algorithm", value: "prim" },
+      { name: "Hamiltonian Cycle", value: "hamiltonian_cycle" },
+    ],
+    "String Algorithms": [
+      { name: "KMP", value: "string-kmp" },
+      { name: "Rabin-Karp", value: "string-rabin" },
+    ],
     "Uncategorized": [],
   };
 
-  const toggleCategory = (cat) => {
+  const toggleCategory = (cat) =>
     setOpenCategory(openCategory === cat ? null : cat);
-  };
 
   return (
     <div className="w-64 bg-gray-800 text-white min-h-screen p-4 space-y-4">
@@ -45,7 +51,11 @@ export default function Sidebar({ onAlgorithmSelect }) {
                 <button
                   key={algo.value}
                   onClick={() => onAlgorithmSelect(algo.value)}
-                  className="block w-full text-left py-1 px-2 hover:bg-gray-600 rounded text-sm"
+                  className={`block w-full text-left py-1 px-2 rounded text-sm ${
+                    selectedAlgorithm === algo.value
+                      ? 'bg-blue-600'
+                      : 'hover:bg-gray-600'
+                  }`}
                 >
                   {algo.name}
                 </button>

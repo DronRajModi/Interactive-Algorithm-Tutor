@@ -8,80 +8,97 @@ app.use(cors());
 app.use(express.json());
 
 let clients = [];
-let lastSortChoice = '';
-let userArray = [];
+let lastChoice = '';
+let userParams = [];
 
 // 1. POST /run-<algorithm>
 app.post('/run-:algorithm', (req, res) => {
   const { algorithm } = req.params;
-  userArray = req.body.array || [];
-  lastSortChoice = algorithm;
+  lastChoice = algorithm;
+  userParams = req.body.array || [];
 
-  console.log(`Starting algorithm: ${algorithm}, userArray: ${userArray}`);
+  console.log(`Running ${algorithm} with params:`, userParams);
   res.sendStatus(200);
 
-  startSortingProcess();
+  startProcess();
 });
 
-// 2. GET /stream — SSE
+// 2. SSE endpoint
 app.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
 
   clients.push(res);
-
   req.on('close', () => {
     clients = clients.filter(c => c !== res);
   });
 });
 
-// 3. Run the appropriate algorithm
-function startSortingProcess() {
-  if (!lastSortChoice) return;
+// 3. Launch backend executable
+function startProcess() {
+  if (!lastChoice) return;
 
-  let executable;
+  const algoDir = path.resolve(__dirname, 'algorithms');
+  let exePath;
   let args = [];
 
-  if (lastSortChoice.startsWith('n-queen')) {
-    executable = path.resolve(__dirname, 'algorithms', 'Backtracking.exe');
-
-    if (userArray.length === 1 && Number.isInteger(userArray[0])) {
-      args = [userArray[0]]; // Pass just the size (e.g., 8)
-    } else {
-      console.warn('Invalid board size for N-Queens:', userArray);
-      return;
-    }
-
-  } else {
-    executable = path.resolve(__dirname, 'algorithms', 'SortingAlgorithm.exe');
-    args = [lastSortChoice, ...userArray]; // e.g., ["merge", 4, 2, 3, 1]
+  switch (lastChoice) {
+    case 'dp-fibonacci':
+      exePath = path.join(algoDir, 'fibonacci.exe');
+      args = userParams.map(String);
+      break;
+    case 'dp-knapsack':
+      exePath = path.join(algoDir, 'knapsack.exe');
+      args = userParams.map(String);
+      break;
+    case 'n-queen':
+      exePath = path.join(algoDir, 'Backtracking.exe');
+      args = userParams.map(String);
+      break;
+    case 'string-kmp':
+      exePath = path.join(algoDir, 'kmp.exe');
+      args = userParams.map(String);
+      break;
+    case 'string-rabin':
+      exePath = path.join(algoDir, 'rabin_karp.exe');
+      args = userParams.map(String);
+      break;
+    default:
+      // Generic algorithms
+      exePath = path.join(algoDir, 'SortingAlgorithm.exe');
+      args = [lastChoice, ...userParams.map(String)];
+      break;
   }
 
-  console.log('Spawning with args:', args);
-  const child = spawn(executable, args.map(String));
+  console.log('Spawning:', exePath, 'Args:', args);
+
+  const child = spawn(exePath, args);
 
   child.stdout.on('data', (data) => {
-    const lines = data.toString().split('\n');
-    for (const line of lines) {
-      if (line.trim()) {
-        clients.forEach(client => {
-          client.write(`data: ${line.trim()}\n\n`);
-        });
-      }
-    }
+    const lines = data.toString().split('\n').filter(Boolean);
+    lines.forEach(line => {
+      clients.forEach(client => client.write(`data: ${line}\n\n`));
+    });
   });
 
   child.on('close', (code) => {
-    console.log(`Child process exited with code ${code}`);
-    clients.forEach(client => {
-      client.write('event: end\ndata: done\n\n');
-      client.end();
+    console.log(`Exited with code ${code}`);
+    clients.forEach(c => {
+      c.write('event: end\ndata: done\n\n');
+      c.end();
+    });
+    clients = [];
+  });
+
+  child.on('error', (err) => {
+    console.error('Spawn error:', err);
+    clients.forEach(c => {
+      c.write(`event: error\ndata: ${JSON.stringify(err.message)}\n\n`);
+      c.end();
     });
     clients = [];
   });
 }
 
-app.listen(5000, () => {
-  console.log('Backend server running at http://localhost:5000');
-});
+app.listen(5000, () => console.log('Server running on http://localhost:5000'));
