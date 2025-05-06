@@ -69,8 +69,6 @@ export default function GraphAlgorithmVisualizer({algorithm}) {
     setExplanation('');
     setIsRunning(true);
 
-    // 2. Parse your userInput into an array of numbers
-    //    e.g. "0 1 4 0 2 1" → [0,1,4,0,2,1]
     const trimmed = userInput.trim();
     const arrayParam = trimmed
       ? trimmed.split(/\s+/).map(s => Number(s))

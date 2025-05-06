@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import PseudocodePanel from './PseudocodePanel'; 
 
 export default function BacktrackingVisualizer() {
     const [steps, setSteps] = useState([]);
@@ -8,10 +9,25 @@ export default function BacktrackingVisualizer() {
     const [speed, setSpeed] = useState(1000);
     const [isPlaying, setIsPlaying] = useState(false);
     const [finalBoard, setFinalBoard] = useState(null);
-    const [showHistory, setShowHistory] = useState(false); // ✅ used for both animation end & "Last"
-
+    const [showHistory, setShowHistory] = useState(false);
+    const [pseudocode, setPseudocode] = useState([]); 
     const eventSourceRef = useRef(null);
     const animationRef = useRef(null);
+
+    useEffect(() => {
+        const fetchPseudocode = async () => {
+            try {
+                const res = await fetch('http://localhost:5000/pseudocode/n-queens');
+                if (res.ok) {
+                    const data = await res.json();
+                    setPseudocode(data);
+                }
+            } catch (err) {
+                console.error('Failed to fetch pseudocode:', err);
+            }
+        };
+        fetchPseudocode();
+    }, []);
 
     useEffect(() => {
         if (isPlaying && currentStepIndex < steps.length - 1) {
@@ -19,7 +35,6 @@ export default function BacktrackingVisualizer() {
                 setCurrentStepIndex((prev) => {
                     const next = prev + 1;
                     if (next === steps.length - 1) {
-                        // ✅ Automatically show history when animation ends
                         setTimeout(() => setShowHistory(true), speed + 50);
                     }
                     return next;
@@ -69,12 +84,11 @@ export default function BacktrackingVisualizer() {
     const handleLast = () => {
         setIsPlaying(false);
         setCurrentStepIndex(steps.length - 1);
-        setShowHistory(true); // ✅ Explicitly show history on "Last"
+        setShowHistory(true);
     };
 
     const renderBoard = (board, highlightRow, highlightCol, placing) => {
         if (!board) return null;
-
         return (
             <div
                 className="grid gap-1"
@@ -114,9 +128,10 @@ export default function BacktrackingVisualizer() {
     };
 
     const currentStep = steps[currentStepIndex];
+    const currentLine = currentStep?.line ?? null; 
 
     return (
-        <div className="p-4 max-w-screen-lg mx-auto">
+        <div className="p-4 max-w-screen-xl mx-auto">
             <h2 className="text-xl font-bold mb-4">N-Queens Visualization</h2>
 
             <div className="flex items-center gap-4 mb-4 flex-wrap">
@@ -161,44 +176,50 @@ export default function BacktrackingVisualizer() {
                 </button>
             </div>
 
-            <div className="mb-6 text-center">
-                <h3 className="text-sm text-gray-500">Step {currentStepIndex + 1} of {steps.length}</h3>
-                <AnimatePresence mode="wait">
-                    {currentStep && (
-                        <motion.div
-                            key={currentStepIndex}
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                        >
-                            {renderBoard(currentStep.board, currentStep.row, currentStep.col, currentStep.placing)}
-                            <div className="mt-2 italic text-gray-600 text-sm">{currentStep.message}</div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+            <div className="flex gap-6 items-start">
+                {/* Board & Message */}
+                <div className="flex-1">
+                    <div className="text-center">
+                        <h3 className="text-sm text-gray-500">Step {currentStepIndex + 1} of {steps.length}</h3>
+                        <AnimatePresence mode="wait">
+                            {currentStep && (
+                                <motion.div
+                                    key={currentStepIndex}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    exit={{ opacity: 0 }}
+                                >
+                                    {renderBoard(currentStep.board, currentStep.row, currentStep.col, currentStep.placing)}
+                                    <div className="mt-2 italic text-gray-600 text-sm">{currentStep.message}</div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
 
-
-
-            {showHistory && (
-                <div className="max-h-[400px] overflow-y-auto border rounded p-2 bg-gray-50 mt-4">
-                    {finalBoard && currentStepIndex === steps.length - 1 && (
-                        <div className="text-center mb-4 ">
-                            <h3 className="text-lg font-semibold text-green-600 mb-2">✅ Final Solution</h3>
-                            {renderBoard(finalBoard)}
+                    {showHistory && (
+                        <div className="max-h-[400px] overflow-y-auto border rounded p-2 bg-gray-50 mt-4">
+                            {finalBoard && currentStepIndex === steps.length - 1 && (
+                                <div className="text-center mb-4 ">
+                                    <h3 className="text-lg font-semibold text-green-600 mb-2">✅ Final Solution</h3>
+                                    {renderBoard(finalBoard)}
+                                </div>
+                            )}
+                            {steps.map((step, index) => (
+                                <div key={index} className="mb-4">
+                                    <div className="text-center text-sm text-gray-600 font-medium mb-1">
+                                        Step {index + 1}
+                                    </div>
+                                    {renderBoard(step.board, step.row, step.col, step.placing)}
+                                    <div className="mt-1 text-center italic text-gray-600">{step.message}</div>
+                                </div>
+                            ))}
                         </div>
                     )}
-                    {steps.map((step, index) => (
-                        <div key={index} className="mb-4">
-                            <div className="text-center text-sm text-gray-600 font-medium mb-1">
-                                Step {index + 1}
-                            </div>
-                            {renderBoard(step.board, step.row, step.col, step.placing)}
-                            <div className="mt-1 text-center italic text-gray-600">{step.message}</div>
-                        </div>
-                    ))}
                 </div>
-            )}
+
+                {/* Pseudocode Panel */}
+                <PseudocodePanel pseudocodeLines={pseudocode} currentLine={currentLine} />
+            </div>
         </div>
     );
 }

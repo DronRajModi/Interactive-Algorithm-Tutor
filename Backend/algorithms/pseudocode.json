@@ -1,0 +1,152 @@
+{
+    "merge-sort": [
+      "function mergeSort(arr)",
+      "  if arr.length > 1",
+      "    mid = arr.length / 2",
+      "    L = left half, R = right half",
+      "    mergeSort(L), mergeSort(R)",
+      "    merge L and R into arr"
+    ],
+    "quick-sort": [
+      "function quicksort(arr, low, high)",
+      "  if low < high",
+      "    pi = partition(arr, low, high)",
+      "    quicksort(arr, low, pi - 1)",
+      "    quicksort(arr, pi + 1, high)"
+    ],
+    "counting-sort": [
+      "function countingSort(arr)",
+      "  find the maximum value in arr",
+      "  create count array of size max + 1",
+      "  for each element in arr, increment count[arr[i]]",
+      "  for i from 1 to count.length - 1, update count[i] by adding count[i-1]",
+      "  for i from arr.length-1 down to 0, place elements in sorted order using count"
+    ],
+    "radix-sort": [
+      "function radixSort(arr)",
+      "  find the maximum number in arr",
+      "  for each digit (starting from least significant digit)",
+      "    sort the elements using counting sort by the current digit",
+      "  repeat until all digits are processed"
+    ],
+    "bubble-sort": [
+      "function bubbleSort(arr)",
+      "  for i from 0 to arr.length - 1",
+      "    for j from 0 to arr.length - i - 1",
+      "      if arr[j] > arr[j + 1], swap(arr[j], arr[j + 1])"
+    ],
+    "selection-sort": [
+      "function selectionSort(arr)",
+      "  for i from 0 to arr.length - 1",
+      "    minIndex = i",
+      "    for j from i + 1 to arr.length",
+      "      if arr[j] < arr[minIndex], set minIndex to j",
+      "    swap(arr[i], arr[minIndex])"
+    ],
+    "insertion-sort": [
+      "function insertionSort(arr)",
+      "  for i from 1 to arr.length - 1",
+      "    key = arr[i]",
+      "    j = i - 1",
+      "    while j >= 0 and arr[j] > key",
+      "      arr[j + 1] = arr[j]",
+      "      j = j - 1",
+      "    arr[j + 1] = key"
+    ],
+    "dp-knapsack": [
+      "function knapsack(W, weights, values, n)",
+      "  create dp[n+1][W+1]",
+      "  for i from 0 to n",
+      "    for w from 0 to W",
+      "      if i == 0 or w == 0",
+      "        dp[i][w] = 0",
+      "      else if weights[i-1] <= w",
+      "        dp[i][w] = max(values[i-1] + dp[i-1][w - weights[i-1]], dp[i-1][w])",
+      "      else",
+      "        dp[i][w] = dp[i-1][w]",
+      "  return dp[n][W]"
+    ],
+    "dp-fibonacci": [
+      "function fibonacciDP(n)",
+      "  create array fib[0..n]",
+      "  fib[0] = 0, fib[1] = 1",
+      "  for i from 2 to n",
+      "    fib[i] = fib[i-1] + fib[i-2]",
+      "  return fib[n]"
+    ],
+    "n-queens": [
+      "function solveNQueens(board, row)",
+      "  if row == N, print board and return",
+      "  for col from 0 to N-1",
+      "    if isSafe(board, row, col)",
+      "      place queen at board[row][col]",
+      "      solveNQueens(board, row + 1)",
+      "      remove queen from board[row][col] (backtrack)"
+    ],
+    "dijkstra": [
+      "function dijkstra(graph, start)",
+      "  create distance[] and set all to infinity, except distance[start] = 0",
+      "  create priority queue pq and insert (0, start)",
+      "  while pq is not empty",
+      "    u = node with smallest distance in pq",
+      "    for each neighbor v of u",
+      "      if distance[u] + weight(u, v) < distance[v]",
+      "        update distance[v]",
+      "        insert (distance[v], v) into pq"
+    ],
+    "prims": [
+      "function prims(graph)",
+      "  create key[] and set all to infinity, key[0] = 0",
+      "  create parent[] and mstSet[]",
+      "  for count from 0 to V-1",
+      "    pick u with min key[u] not in mstSet",
+      "    include u in mstSet",
+      "    for each neighbor v of u",
+      "      if weight(u, v) < key[v] and v not in mstSet",
+      "        key[v] = weight(u, v), parent[v] = u"
+    ],
+    "hamiltonian-cycle": [
+      "function hamiltonianCycle(graph)",
+      "  path[0] = 0",
+      "  if hamiltonianUtil(graph, path, 1) == false",
+      "    print 'No solution'",
+      "  else",
+      "    print path",
+      "",
+      "function hamiltonianUtil(graph, path, pos)",
+      "  if pos == V and graph[path[pos-1]][path[0]] == 1",
+      "    return true",
+      "  for v from 1 to V-1",
+      "    if isSafe(v, graph, path, pos)",
+      "      path[pos] = v",
+      "      if hamiltonianUtil(graph, path, pos+1) == true",
+      "        return true",
+      "      path[pos] = -1",
+      "  return false"
+    ],
+    "string-kmp": [
+    "function KMP(text, pattern)",
+    "  compute LPS (Longest Prefix Suffix) array for pattern",
+    "  i = 0, j = 0",
+    "  while i < text.length",
+    "    if pattern[j] == text[i]",
+    "      i++, j++",
+    "      if j == pattern.length, match found at i - j",
+    "    else if j != 0",
+    "      j = LPS[j - 1]",
+    "    else",
+    "      i++"
+  ],
+  "string-rabin": [
+    "function rabinKarp(text, pattern, d, q)",
+    "  n = text.length, m = pattern.length",
+    "  h = (d^(m-1)) % q",
+    "  calculate hash of pattern and first window of text",
+    "  for i from 0 to n - m",
+    "    if hash(pattern) == hash(text window)",
+    "      compare characters one by one",
+    "      if match, pattern found at index i",
+    "    if i < n - m",
+    "      update hash for next window"
+  ]
+}

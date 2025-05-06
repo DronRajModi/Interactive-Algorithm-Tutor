@@ -35,6 +35,16 @@ app.get('/stream', (req, res) => {
   });
 });
 
+app.get('/pseudocode/:algorithm', (req, res) => {
+  const algorithm = req.params.algorithm;
+  const pseudocode = require(`./algorithms/pseudocode.json`);
+  if (pseudocode[algorithm]) {
+    res.json(pseudocode[algorithm]);
+  } else {
+    res.status(404).send('Pseudocode not found for this algorithm');
+  }
+});
+
 // 3. Launch backend executable
 function startProcess() {
   if (!lastChoice) return;
@@ -48,15 +58,15 @@ function startProcess() {
       exePath = path.join(algoDir, 'fibonacci.exe');
       args = userParams.map(String);
       break;
+      case 'dp-knapsack':
+        exePath = path.join(algoDir, 'knapsack.exe');
+        args = userParams.map(String);
+        break;
     case 'greedy':
       exePath = path.join(algoDir, 'Greedy.exe');
       args = userParams.map(String);
       break;
 
-    case 'dp-knapsack':
-      exePath = path.join(algoDir, 'knapsack.exe');
-      args = userParams.map(String);
-      break;
     case 'n-queen':
       exePath = path.join(algoDir, 'Backtracking.exe');
       args = userParams.map(String);

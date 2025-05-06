@@ -74,10 +74,10 @@ void KMPSearch(const string& text, const string& pattern) {
         }
 
         if (j == m) {
-            // found a match
+          
             logStep(text, pattern,
-                    /*l=*/i - j,
-                    /*r=*/j,
+                    i - j,
+                    j,
                     "Pattern found at index " + to_string(i - j));
             return;
         } else if (i < n && pattern[j] != text[i]) {
