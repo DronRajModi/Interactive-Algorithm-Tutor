@@ -4,17 +4,16 @@ import { motion } from 'framer-motion';
 const WIDTH = 600;
 const HEIGHT = 400;
 
-export default function GraphAlgorithmVisualizer() {
+export default function GraphAlgorithmVisualizer({algorithm}) {
   const [graph, setGraph] = useState({ nodes: [], edges: [] });
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [speed, setSpeed] = useState(1000);
-  const [finalPath, setFinalPath] = useState([]); // for Dijkstra
-  const [finalEdges, setFinalEdges] = useState([]); // for Prim
+  const [finalPath, setFinalPath] = useState([]); 
+  const [finalEdges, setFinalEdges] = useState([]); 
   const [totalCost, setTotalCost] = useState(0);
-  const [algorithm, setAlgorithm] = useState('dijkstra');
   const [userInput, setUserInput] = useState('');
   const [nodePositions, setNodePositions] = useState({});
   const [explanation, setExplanation] = useState('');
@@ -59,105 +58,107 @@ export default function GraphAlgorithmVisualizer() {
 
   // Handle Start: sends request to backend and begins playback
   const handleStart = () => {
-    setIsPlaying(false); // Stop existing animation if any
+    // 1. Reset everything
+    setIsPlaying(false);
+    clearInterval(intervalRef.current);
     setCurrentStep(0);
-    setSteps([]); // Clear previous steps
+    setSteps([]);
     setFinalPath([]);
     setFinalEdges([]);
     setTotalCost(0);
     setExplanation('');
-    clearInterval(intervalRef.current);
     setIsRunning(true);
 
-    const endpoint = `http://localhost:5000/run-greedy-${algorithm.toLowerCase()}`;
+    // 2. Parse your userInput into an array of numbers
+    //    e.g. "0 1 4 0 2 1" → [0,1,4,0,2,1]
+    const trimmed = userInput.trim();
+    const arrayParam = trimmed
+      ? trimmed.split(/\s+/).map(s => Number(s))
+      : [];
 
+    // 3. Build the request body exactly as your server expects:
+    const body = arrayParam.length > 0
+      ? { array: arrayParam }
+      : {};  
+
+    const endpoint = `http://localhost:5000/run-greedy-${algorithm}`;
     fetch(endpoint, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        input: userInput.trim() // May be empty; backend will handle default
-      })
-    }).then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to start algorithm');
-      }
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    })
+      .then(response => {
+        if (!response.ok) throw new Error('Failed to start algorithm');
 
-      const eventSource = new EventSource('http://localhost:5000/stream');
+        // 4. Open the SSE stream **after** the POST completes
+        const eventSource = new EventSource('http://localhost:5000/stream');
 
-      eventSource.onmessage = (event) => {
-        const data = JSON.parse(event.data);
+        eventSource.onmessage = (e) => {
+          const data = JSON.parse(e.data);
 
-        switch (data.type) {
-          case 'init':
-            // Use calculateNodePositions here with the nodes from backend
-            const positions = calculateNodePositions(data.nodes);
-            setNodePositions(positions);
-            setGraph({
-              nodes: data.nodes,
-              edges: data.edges
-            });
-            break;
+          switch (data.type) {
+            case 'init':
+              // set graph and compute positions...
+              const positions = calculateNodePositions(data.nodes);
+              setNodePositions(positions);
+              setGraph({ nodes: data.nodes, edges: data.edges });
+              break;
 
-          case 'visit':
-          case 'update':
-          case 'include':
-            setSteps(prevSteps => {
-              const newSteps = [...prevSteps, data];
-              // Start playing if this is the first step
-              if (prevSteps.length === 0) {
-                setIsPlaying(true);
-                setCurrentStep(0);
+            case 'visit':
+            case 'update':
+            case 'include':
+              setSteps(prev => {
+                const next = [...prev, data];
+                // auto-start playback on first step
+                if (prev.length === 0) {
+                  setIsPlaying(true);
+                  setCurrentStep(0);
+                }
+                return next;
+              });
+              break;
+
+            case 'final':
+              if (data.path) {
+                setFinalPath(data.path.split('->').map(Number));
+                setTotalCost(data.cost);
+                setExplanation(data.explanation);
+              } else if (data.mst) {
+                const edges = (data.mst.match(/\((\d+)-(\d+)\)/g) || [])
+                  .map(pair => {
+                    const [, from, to] = pair.match(/\((\d+)-(\d+)\)/);
+                    return { from: +from, to: +to };
+                  });
+                setFinalEdges(edges);
+                setTotalCost(data.cost);
+                setExplanation(data.explanation);
               }
-              return newSteps;
-            });
-            break;
+              break;
 
-          case 'final':
-            if (data.path) {
-              setFinalPath(data.path.split('->').map(Number));
-              setTotalCost(data.cost);
-              setExplanation(data.explanation);
-            } else if (data.mst) {
-              const edges = data.mst
-                .match(/\((\d+)-(\d+)\)/g)
-                .map(pair => {
-                  const [_, from, to] = pair.match(/\((\d+)-(\d+)\)/);
-                  return { from: parseInt(from), to: parseInt(to) };
-                });
-              setFinalEdges(edges);
-              setTotalCost(data.cost);
-              setExplanation(data.explanation);
-            }
-            break;
+            case 'end':
+              eventSource.close();
+              setIsRunning(false);
+              break;
 
-          case 'end':
-            eventSource.close();
-            setIsRunning(false);
-            break;
+            case 'error':
+              alert(data.message || 'Error occurred');
+              eventSource.close();
+              setIsRunning(false);
+              break;
+          }
+        };
 
-          case 'error':
-            alert(data.message || 'Error occurred.');
-            eventSource.close();
-            setIsRunning(false);
-            break;
-
-          default:
-            console.warn('Unknown message type:', data);
-        }
-      };
-
-      eventSource.onerror = (err) => {
-        console.error('SSE error:', err);
-        eventSource.close();
+        eventSource.onerror = () => {
+          eventSource.close();
+          setIsRunning(false);
+        };
+      })
+      .catch(err => {
+        alert('Error: ' + err.message);
         setIsRunning(false);
-      };
-    }).catch(err => {
-      alert('Error: ' + err.message);
-      setIsRunning(false);
-    });
+      });
   };
+
 
   const handlePause = () => {
     setIsPlaying(false);
@@ -212,50 +213,19 @@ export default function GraphAlgorithmVisualizer() {
 
   return (
     <div className="p-5 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Graph Algorithm Visualizer</h1>
+      <h1 className="text-2xl font-bold mb-4">{algorithm.toUpperCase()} VISUALIZER</h1>
       
-      <div className="mb-4">
-        <div className="flex gap-4 mb-2">
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="dijkstra"
-              name="algorithm"
-              value="dijkstra"
-              checked={algorithm === 'dijkstra'}
-              onChange={() => setAlgorithm('dijkstra')}
-              className="mr-2"
-            />
-            <label htmlFor="dijkstra">Dijkstra's Algorithm</label>
-          </div>
-          <div className="flex items-center">
-            <input
-              type="radio"
-              id="prims"
-              name="algorithm"
-              value="prims"
-              checked={algorithm === 'prims'}
-              onChange={() => setAlgorithm('prims')}
-              className="mr-2"
-            />
-            <label htmlFor="prims">Prim's Algorithm</label>
-          </div>
-        </div>
-        
+
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Enter edge list as "from to weight" triplets (e.g., "0 1 4 0 2 1 1 2 2 1 3 5 2 3 8")
-          </label>
           <input
             type="text"
             value={userInput}
             onChange={e => setUserInput(e.target.value)}
-            placeholder="Leave empty for default graph from backend"
+            placeholder="Enter edge list as from to weight triplets (e.g., 0 1 4 0 2 1 1 2 2 1 3 5 2 3 8)"
             className="w-full border border-gray-300 p-2 rounded"
           />
         </div>
-      </div>
-
+     
       <div className="flex items-center gap-4 mb-4">
         <button 
           onClick={handleStart} 

@@ -48,6 +48,11 @@ function startProcess() {
       exePath = path.join(algoDir, 'fibonacci.exe');
       args = userParams.map(String);
       break;
+    case 'greedy':
+      exePath = path.join(algoDir, 'Greedy.exe');
+      args = userParams.map(String);
+      break;
+
     case 'dp-knapsack':
       exePath = path.join(algoDir, 'knapsack.exe');
       args = userParams.map(String);
@@ -63,6 +68,19 @@ function startProcess() {
     case 'string-rabin':
       exePath = path.join(algoDir, 'rabin_karp.exe');
       args = userParams.map(String);
+      break;
+    case 'greedy-dijkstra':
+      exePath = path.join(algoDir, 'Greedy.exe');
+      args = ['dijkstra', ...userParams.map(String)];
+      break;
+
+    case 'greedy-prims':
+      exePath = path.join(algoDir, 'Greedy.exe');
+      args = ['prims', ...userParams.map(String)];
+      break;
+    case 'greedy-kruskal':
+      exePath = path.join(algoDir, 'Greedy.exe');
+      args = ['prims', ...userParams.map(String)];
       break;
     default:
       // Generic algorithms

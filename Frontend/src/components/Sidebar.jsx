@@ -22,14 +22,15 @@ export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
     ],
     "Greedy": [
       { name: "Dijkstra's Algorithm", value: "dijkstra" },
-      { name: "Prim's Algorithm", value: "prim" },
+      { name: "Prim's Algorithm", value: "prims" },
       { name: "Hamiltonian Cycle", value: "hamiltonian_cycle" },
+      {name: "Kruskal's Algorithm", value: "kruskal" },
     ],
     "String Algorithms": [
       { name: "KMP", value: "string-kmp" },
       { name: "Rabin-Karp", value: "string-rabin" },
     ],
-    "Uncategorized": [],
+   
   };
 
   const toggleCategory = (cat) =>

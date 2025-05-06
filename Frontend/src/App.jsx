@@ -9,8 +9,8 @@ import StringAlgoVisualizer from './components/StringAlgoVisualizer';
 export default function App() {
   const [selectedAlgorithm, setSelectedAlgorithm] = useState('');
 
-  const isBacktracking = selectedAlgorithm === 'nqueen';
-  const isGreedy = ['dijkstra', 'prim', 'hamiltonian_cycle'].includes(selectedAlgorithm);
+  const isBacktracking = selectedAlgorithm === 'backtracking-nqueen';
+  const isGreedy = ['dijkstra', 'prims', 'hamiltonian_cycle','kruskal'].includes(selectedAlgorithm);
   const isDP = ['dp-knapsack', 'dp-fibonacci'].includes(selectedAlgorithm);
   const isStringAlgo = ['string-kmp', 'string-rabin'].includes(selectedAlgorithm);
 

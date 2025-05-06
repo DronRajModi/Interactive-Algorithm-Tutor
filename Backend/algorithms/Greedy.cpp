@@ -195,6 +195,69 @@ void runPrims(const Graph& graph, int start = 0) {
     printFinalMST(totalCost, mstEdges);
 }
 
+struct DSU {
+    unordered_map<int,int> parent, rank;
+    void makeSet(int x) {
+        parent[x] = x;
+        rank[x] = 0;
+    }
+    int findSet(int x) {
+        if (parent[x] != x) 
+            parent[x] = findSet(parent[x]);
+        return parent[x];
+    }
+    bool unionSet(int a, int b) {
+        a = findSet(a); 
+        b = findSet(b);
+        if (a == b) return false;
+        if (rank[a] < rank[b]) 
+            swap(a,b);
+        parent[b] = a;
+        if (rank[a] == rank[b]) 
+            rank[a]++;
+        return true;
+    }
+};
+
+
+void runKruskal(const Graph& graph) {
+    printInit(graph);
+
+    // 1) Build edge list
+    vector<tuple<int,int,int>> edges;
+    for (auto& [u, nbrs] : graph) {
+        for (auto& e : nbrs) {
+            int v = e.to, w = e.weight;
+            if (u < v) edges.emplace_back(w,u,v);
+        }
+    }
+
+    sort(edges.begin(), edges.end(),
+         [](auto &a, auto &b){ return get<0>(a) < get<0>(b); });
+
+    // 3) Initialize DSU
+    DSU dsu;
+    for (auto& [u,_] : graph) 
+        dsu.makeSet(u);
+
+    vector<pair<int,int>> mstEdges;
+    int totalCost = 0;
+
+    for (auto& [w,u,v] : edges) {
+        if (dsu.unionSet(u,v)) {
+            totalCost += w;
+            mstEdges.emplace_back(u,v);
+            // Emit a step for inclusion
+            printStep("include", u, w,
+                      "Kruskal: include edge " + to_string(u) +
+                      "-" + to_string(v) + " (w=" + to_string(w) + ")");
+        }
+    }
+
+    // 5) Output final MST
+    printFinalMST(totalCost, mstEdges);
+}
+
 void printEnd() {
     cout << "{\"type\":\"end\"}" << endl;
 }
@@ -218,7 +281,10 @@ int main(int argc, char* argv[]) {
         runDijkstra(graph, 0, 3);
     } else if (algo == "prims") {
         runPrims(graph);
-    } else {
+    } else if (algo == "kruskal") {
+        runKruskal(graph);
+    }
+    else {
         cerr << "{\"type\":\"error\",\"message\":\"Unknown algorithm: " << algo << "\"}" << endl;
         return 1;
     }
