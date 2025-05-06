@@ -10,12 +10,12 @@ export default function DPVisualizerAnimated({ algorithm }) {
   const [runId, setRunId] = useState(0);
   const eventRef = useRef(null);
   const [pseudocode, setPseudocode] = useState([]);
-  const [fibInput, setFibInput] = useState('10');
-  const [cap, setCap] = useState('10');
-  const [weights, setWeights] = useState('2,3,4,5');
-  const [values, setValues] = useState('3,4,5,6');
+  const [fibInput, setFibInput] = useState('');
+  const [cap, setCap] = useState('');
+  const [weights, setWeights] = useState('');
+  const [values, setValues] = useState('');
   const currentLine = currentStep?.line ?? null;
-  // Reset state
+
   const reset = () => {
     setDpMatrix([]);
     setCurrentStep(null);
@@ -26,7 +26,6 @@ export default function DPVisualizerAnimated({ algorithm }) {
     }
   };
 
-  // Start button handler
   const handleStart = () => {
     reset();
     setRunId(id => id + 1);
@@ -47,34 +46,45 @@ export default function DPVisualizerAnimated({ algorithm }) {
     fetchPseudocode();
   }, [algorithm]);
 
-
   useEffect(() => {
     reset();
     setRunId(0);
   }, [algorithm]);
 
-  // SSE + trigger backend on each runId increment
   useEffect(() => {
     if (runId === 0) return;
 
-    // Build parameters
-    let params = [];
+    let params = null;
+
     if (algorithm === 'dp-fibonacci') {
-      params = [parseInt(fibInput, 10) || 0];
+      if (fibInput.trim() !== '') {
+        const parsed = parseInt(fibInput, 10);
+        if (!isNaN(parsed)) {
+          params = [parsed];
+        }
+      }
     } else {
-      const wArr = weights.split(',').map(n => parseInt(n, 10));
-      const vArr = values.split(',').map(n => parseInt(n, 10));
-      params = [parseInt(cap, 10), wArr.length, ...wArr, ...vArr];
+      if (cap && weights && values) {
+        try {
+          const wArr = weights.split(',').map(n => parseInt(n, 10));
+          const vArr = values.split(',').map(n => parseInt(n, 10));
+          const c = parseInt(cap, 10);
+          if (!wArr.some(isNaN) && !vArr.some(isNaN) && !isNaN(c)) {
+            params = [c, wArr.length, ...wArr, ...vArr];
+          }
+        } catch (err) {
+          console.error('Invalid input:', err);
+        }
+      }
     }
 
-    // Send POST
+    // Send POST only if params exist, otherwise let backend use defaults
     fetch(`http://localhost:5000/run-${algorithm}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ array: params })
+      body: JSON.stringify(params ? { array: params } : {})
     });
 
-    // Open SSE
     const es = new EventSource('http://localhost:5000/stream');
     eventRef.current = es;
 
@@ -87,18 +97,19 @@ export default function DPVisualizerAnimated({ algorithm }) {
       } catch {
         return;
       }
-      // Filter unwanted
+
       if (algorithm === 'dp-fibonacci' && obj.message === 'Fibonacci complete') return;
       if (algorithm === 'dp-knapsack' && !('dpRow' in obj)) return;
       if (algorithm === 'dp-fibonacci' && !('result' in obj)) return;
+
       setStepQueue(q => [...q, obj]);
     };
+
     es.addEventListener('end', () => es.close());
 
     return () => es.close();
   }, [runId, algorithm]);
 
-  // Process each queued step
   useEffect(() => {
     if (!currentStep && stepQueue.length) {
       const [step, ...rest] = stepQueue;
@@ -131,7 +142,7 @@ export default function DPVisualizerAnimated({ algorithm }) {
 
   return (
     <div className="p-4 flex justify-between">
-      <div className='p-4'>
+      <div className="p-4">
         <h2 className="text-xl font-bold capitalize mb-4">{display} Visualization</h2>
 
         {/* Controls */}
@@ -139,29 +150,58 @@ export default function DPVisualizerAnimated({ algorithm }) {
           {algorithm === 'dp-fibonacci' && (
             <div>
               <label>n:</label>
-              <input type="number" value={fibInput} onChange={e => setFibInput(e.target.value)} className="border ml-2 p-1 w-20" />
+              <input
+                type="number"
+                value={fibInput}
+                onChange={e => setFibInput(e.target.value)}
+                placeholder="Value"
+                className="border ml-2 p-1 w-20"
+              />
             </div>
           )}
           {algorithm === 'dp-knapsack' && (
             <>
               <label>cap:</label>
-              <input value={cap} onChange={e => setCap(e.target.value)} className="border ml-2 p-1 w-16" />
+              <input
+                value={cap}
+                onChange={e => setCap(e.target.value)}
+                placeholder="Weight"
+                className="border ml-2 p-1 w-16"
+              />
               <label className="ml-4">weights:</label>
-              <input value={weights} onChange={e => setWeights(e.target.value)} className="border ml-2 p-1 w-40" />
+              <input
+                value={weights}
+                onChange={e => setWeights(e.target.value)}
+                placeholder="weights like this 1,2,3...."
+                className="border ml-2 p-1 w-40"
+              />
               <label className="ml-4">values:</label>
-              <input value={values} onChange={e => setValues(e.target.value)} className="border ml-2 p-1 w-40" />
+              <input
+                value={values}
+                onChange={e => setValues(e.target.value)}
+                placeholder="values like this 1,2,3"
+                className="border ml-2 p-1 w-40"
+              />
             </>
           )}
           <div>
             <label>Speed: {speed}ms</label>
-            <input type="range" min="100" max="2000" step="100" value={speed} onChange={e => setSpeed(+e.target.value)} className="ml-2" />
+            <input
+              type="range"
+              min="100"
+              max="2000"
+              step="100"
+              value={speed}
+              onChange={e => setSpeed(+e.target.value)}
+              className="ml-2"
+            />
           </div>
           <button onClick={handleStart} className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
             Start
           </button>
         </div>
 
-        {/* Visualization Table */}
+        {/* DP Table */}
         {runId > 0 && (
           <table className="table-auto border-collapse mb-2">
             <tbody>
@@ -192,7 +232,14 @@ export default function DPVisualizerAnimated({ algorithm }) {
         {/* Step Info */}
         <AnimatePresence>
           {currentStep && (
-            <motion.div key={JSON.stringify(currentStep)} className="p-2 bg-gray-100 rounded" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} transition={{ duration: 0.3 }}>
+            <motion.div
+              key={JSON.stringify(currentStep)}
+              className="p-2 bg-gray-100 rounded"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3 }}
+            >
               {algorithm === 'dp-fibonacci'
                 ? currentStep.prevIndices
                   ? `Sum indices ${currentStep.prevIndices[0]} + ${currentStep.prevIndices[1]} = ${currentStep.result}`
@@ -203,8 +250,8 @@ export default function DPVisualizerAnimated({ algorithm }) {
           )}
         </AnimatePresence>
       </div>
-        <PseudocodePanel pseudocodeLines={pseudocode} currentLine={currentLine} />
-    </div>
 
+      <PseudocodePanel pseudocodeLines={pseudocode} currentLine={currentLine} />
+    </div>
   );
 }
