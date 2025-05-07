@@ -1,10 +1,8 @@
 #include <iostream>
 #include <vector>
 #include <string>
-
 using namespace std;
 
-// Emit JSON with text, pattern, l, r, and message
 void logStep(const string& text,
              const string& pattern,
              int l,
@@ -20,7 +18,7 @@ void logStep(const string& text,
     cout << "}" << endl;
 }
 
-void computeLPSArray(const string& pattern,
+void lpsarray(const string& pattern,
                      vector<int>& lps) {
     int length = 0;
     lps[0] = 0;
@@ -57,14 +55,11 @@ void KMPSearch(const string& text, const string& pattern) {
     int m = pattern.size();
 
     vector<int> lps(m);
-    computeLPSArray(pattern, lps);
+    lpsarray(pattern, lps);
 
     int i = 0;  // index for text
     int j = 0;  // index for pattern
-
-    // Initial log
     logStep(text, pattern, /*l=*/-1, /*r=*/-1, "Starting KMP Search");
-
     while (i < n) {
         logStep(text, pattern, /*l=*/i, /*r=*/j, "Matching characters");
 
@@ -101,8 +96,8 @@ void KMPSearch(const string& text, const string& pattern) {
 }
 
 int main(int argc, char* argv[]) {
-    string text    = "ABKBDABACDABABCABLB";
-    string pattern = "ABABCABAB";
+    string text    = "auntymomos";
+    string pattern = "momo";
 
     if (argc > 1) text    = argv[1];
     if (argc > 2) pattern = argv[2];

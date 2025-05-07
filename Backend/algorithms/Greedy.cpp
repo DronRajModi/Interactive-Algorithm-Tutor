@@ -8,21 +8,15 @@
 #include <unordered_set>
 #include <set>
 #include <algorithm>
-
 using namespace std;
-
 struct Edge {
     int to;
     int weight;
 };
-
 using Graph = unordered_map<int, vector<Edge>>;
-
-// step counter for uniform logging
 static int STEP = 0;
-
 void printStep(const string& type, int a, int b, const string& explanation) {
-    // `a` is node or u, `b` is value or v depending on type
+    // a is node or u, b is value or v depending on type
     cout << "{"
          << "\"step\":" << STEP++ << ","
          << "\"type\":\"" << type << "\","
@@ -73,7 +67,6 @@ void printInit(const Graph& graph) {
             nodes.insert(v);
         }
     }
-
     cout << "{"
          << "\"step\":" << STEP++ << ","
          << "\"type\":\"init\","
@@ -126,29 +119,29 @@ void runDijkstra(const Graph& graph, int start=0, int end=3) {
     while (!pq.empty()) {
         auto [d,u] = pq.top(); pq.pop();
         printStep("choose", u, d,
-                  "Choosing node "+to_string(u)+" with dist="+to_string(d));           // ⏱️
+                  "Choosing node "+to_string(u)+" with dist="+to_string(d));           
 
         if (d>dist[u]) {
-            printStep("skip",u,d,"Skipping stale entry for node "+to_string(u));    // ⏱️
+            printStep("skip",u,d,"Skipping stale entry for node "+to_string(u));   
             continue;
         }
         if (vis.count(u)) {
-            printStep("skip",u,d,"Skipping already visited node "+to_string(u));    // ⏱️
+            printStep("skip",u,d,"Skipping already visited node "+to_string(u));   
             continue;
         }
         vis.insert(u);
-        printStep("visit",u,d,"Visiting node "+to_string(u));                     // ⏱️
+        printStep("visit",u,d,"Visiting node "+to_string(u));        
 
         for (auto& e: graph.at(u)) {
             int v=e.to, w=e.weight;
             printStep("consider", u, v,
-                      "Considering edge "+to_string(u)+"->"+to_string(v)+" (w="+to_string(w)+")"); // ⏱️
+                      "Considering edge "+to_string(u)+"->"+to_string(v)+" (w="+to_string(w)+")"); 
             if (dist[u]+w < dist[v]) {
                 dist[v]=dist[u]+w;
                 prev[v]=u;
                 pq.push({dist[v],v});
                 printStep("update",v,dist[v],
-                          "Updated dist["+to_string(v)+"]="+to_string(dist[v]));     // ⏱️
+                          "Updated dist["+to_string(v)+"]="+to_string(dist[v]));    
             }
         }
     }
@@ -179,28 +172,28 @@ void runPrims(const Graph& graph, int start=0) {
     while(!pq.empty()) {
         auto [cost,u] = pq.top(); pq.pop();
         printStep("choose", u, cost,
-                  "Choosing node "+to_string(u)+" with key="+to_string(cost));     // ⏱️
+                  "Choosing node "+to_string(u)+" with key="+to_string(cost));    
 
         if (inMST[u]) {
-            printStep("skip",u,cost,"Skipping node already in MST "+to_string(u)); // ⏱️
+            printStep("skip",u,cost,"Skipping node already in MST "+to_string(u)); 
             continue;
         }
         inMST[u]=true;
         total+=cost;
         if (u!=start) mst.emplace_back(parent[u],u);
         printStep("include",u,cost,
-                  "Include node "+to_string(u)+" with connecting cost="+to_string(cost)); // ⏱️
+                  "Include node "+to_string(u)+" with connecting cost="+to_string(cost)); 
 
         for (auto& e: graph.at(u)) {
             int v=e.to, w=e.weight;
             printStep("consider",u,v,
-                      "Considering edge "+to_string(u)+"->"+to_string(v)+" (w="+to_string(w)+")"); // ⏱️
+                      "Considering edge "+to_string(u)+"->"+to_string(v)+" (w="+to_string(w)+")"); 
             if (!inMST[v] && w<key[v]) {
                 key[v]=w;
                 parent[v]=u;
                 pq.push({w,v});
                 printStep("update",v,w,
-                          "Update key["+to_string(v)+"]="+to_string(w));              // ⏱️
+                          "Update key["+to_string(v)+"]="+to_string(w));              
             }
         }
     }
@@ -243,18 +236,18 @@ void runKruskal(const Graph& graph) {
     for (auto& [w,u,v]: edges) {
         printStep("consider", u, v,
                   "Considering edge "+to_string(u)+"-"+to_string(v)
-                  +" (w="+to_string(w)+")");                          // ⏱️
+                  +" (w="+to_string(w)+")");                          
         if (!dsu.unionSet(u,v)) {
             printStep("skip",u,v,
                       "Skipping edge "+to_string(u)+"-"+to_string(v)
-                      +" (would form cycle)");                         // ⏱️
+                      +" (would form cycle)");                        
             continue;
         }
         total+=w;
         mst.emplace_back(u,v);
         printStep("include",u,w,
                   "Kruskal: include edge "+to_string(u)+"-"+to_string(v)
-                  +" (w="+to_string(w)+")");                           // ⏱️
+                  +" (w="+to_string(w)+")");                           
     }
 
     printFinalMST(total, mst);

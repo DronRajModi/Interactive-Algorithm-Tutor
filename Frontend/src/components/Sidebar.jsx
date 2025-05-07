@@ -4,7 +4,7 @@ export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
   const [openCategory, setOpenCategory] = useState(null);
 
   const categories = {
-    "Divide and Conquer": [
+    "Sorting Algorithm": [
       { name: "Merge Sort", value: "merge-sort" },
       { name: "Quick Sort", value: "quick-sort" },
       { name: "Counting Sort", value: "counting-sort" },

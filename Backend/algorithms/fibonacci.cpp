@@ -12,7 +12,7 @@ void logStep(int n, int result, const string& message, const vector<int>& prevIn
     cout << "\"message\":\"" << message << "\"";
     if (!prevIndices.empty()) {
         cout << ", \"prevIndices\": [";
-        for (size_t i = 0; i < prevIndices.size(); ++i) {
+        for (int i = 0; i < prevIndices.size(); ++i) {
             cout << prevIndices[i];
             if (i + 1 < prevIndices.size()) cout << ",";
         }
@@ -43,10 +43,10 @@ int fibonacci(int n) {
 }
 
 int main(int argc, char* argv[]) {
-    int n = 10; // Default Fibonacci number
+    int n = 10; 
 
     if (argc > 1) {
-        n = stoi(argv[1]);  // Set custom n if provided
+        n = stoi(argv[1]);  
     }
 
     logStep(n, 1, "Starting Fibonacci calculation");

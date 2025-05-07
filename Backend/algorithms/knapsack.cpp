@@ -11,7 +11,7 @@ void printStep(int i, int w, const string& decision, int currentValue, const vec
     cout << "\"decision\": \"" << decision << "\", ";
     cout << "\"currentValue\": " << currentValue << ", ";
     cout << "\"dpRow\": [";
-    for (size_t j = 0; j < dp[i].size(); ++j) {
+    for (int j = 0; j < dp[i].size(); ++j) {
         cout << dp[i][j];
         if (j < dp[i].size() - 1) cout << ", ";
     }
@@ -61,15 +61,12 @@ int main(int argc, char* argv[]) {
             weights = parseArgs(argc, argv, 3, itemCount);
             values = parseArgs(argc, argv, 3 + itemCount, itemCount);
         } else {
-            cerr << "❌ Not enough arguments for weights and values." << endl;
+            cerr << " Not enough arguments for weights and values." << endl;
             return 1;
         }
     }
-
     cout << "{\"action\": \"start\", \"maxWeight\": " << W << ", \"items\": " << weights.size() << "}" << endl;
-
     knapsack(W, weights, values);
-
     cout << "{\"action\": \"end\"}" << endl;
     return 0;
 }

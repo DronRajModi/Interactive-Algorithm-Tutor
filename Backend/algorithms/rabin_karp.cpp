@@ -3,10 +3,8 @@
 
 using namespace std;
 
-const int d = 256; // Number of characters in the input alphabet
-const int q = 101; // A prime number for hashing
-
-// Now take pattern by reference so logStep can always print it
+const int d = 256; // number of characters in the input alphabet
+const int q = 101; // prime number for hashing
 void logStep(const string& text, int l, int r, const string& message, const string& pattern) {
     cout << "{";
     cout << "\"type\":\"Rabin-Karp\", ";
@@ -25,7 +23,7 @@ void rabinKarpSearch(const string& text, const string& pattern) {
     int t = 0; // hash for text
     int h = 1;
 
-    // Precompute h = (d^(m-1)) % q
+    // computing the hash function : h = (d^(m-1)) % q
     for (int i = 0; i < m - 1; i++)
         h = (h * d) % q;
 
@@ -35,10 +33,8 @@ void rabinKarpSearch(const string& text, const string& pattern) {
         t = (d * t + text[i]) % q;
     }
 
-    // Slide over text
     for (int i = 0; i <= n - m; i++) {
         logStep(text, i, -1, "Checking substring starting at index " + to_string(i), pattern);
-
         if (p == t) {
             int j;
             for (j = 0; j < m; j++)
@@ -49,8 +45,6 @@ void rabinKarpSearch(const string& text, const string& pattern) {
                 return;
             }
         }
-
-        // Compute next window hash
         if (i < n - m) {
             t = (d * (t - text[i] * h) + text[i + m]) % q;
             if (t < 0) t += q;
@@ -61,8 +55,8 @@ void rabinKarpSearch(const string& text, const string& pattern) {
 }
 
 int main(int argc, char* argv[]) {
-    string text  = "pananansnandskajn";
-    string pattern = "pan";
+    string text  = "pansinghtomar";
+    string pattern = "singh";
 
     if (argc > 1) text    = argv[1];
     if (argc > 2) pattern = argv[2];

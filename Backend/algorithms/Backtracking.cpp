@@ -2,16 +2,12 @@
 #include <vector>
 #include <string>
 #include <sstream>
-
 using namespace std;
-
 int N;
-
-// Emits board JSON
 void emitStep(const vector<string>& board, const string& message, int row, int col, bool placing) {
     stringstream ss;
     ss << R"({"board":[)";
-    for (size_t i = 0; i < board.size(); ++i) {
+    for (int i = 0; i < board.size(); ++i) {
         ss << "\"" << board[i] << "\"";
         if (i != board.size() - 1) ss << ",";
     }
@@ -19,7 +15,6 @@ void emitStep(const vector<string>& board, const string& message, int row, int c
     cout << ss.str() << endl;
     cout.flush();
 }
-
 bool isSafe(const vector<string>& board, int row, int col) {
     for (int i = 0; i < row; ++i)
         if (board[i][col] == 'Q') return false;
@@ -29,12 +24,11 @@ bool isSafe(const vector<string>& board, int row, int col) {
         if (board[i][j] == 'Q') return false;
     return true;
 }
-
 bool solutionFound = false;
 
 bool solve(vector<string>& board, int row) {
     if (row == N) {
-        emitStep(board, "✅ Solution found!", -1, -1, false);
+        emitStep(board, " Solution found!", -1, -1, false);
         return true; // stop recursion here
     }
 
@@ -43,7 +37,7 @@ bool solve(vector<string>& board, int row) {
         if (isSafe(board, row, col)) {
             board[row][col] = 'Q';
             emitStep(board, "Placed queen at (" + to_string(row) + "," + to_string(col) + ")", row, col, true);
-            if (solve(board, row + 1)) return true; // ✅ return early if solved
+            if (solve(board, row + 1)) return true; 
             board[row][col] = '.';
             emitStep(board, "Backtracking from (" + to_string(row) + "," + to_string(col) + ")", row, col, false);
         } else {

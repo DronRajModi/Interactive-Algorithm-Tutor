@@ -11,7 +11,6 @@ let clients = [];
 let lastChoice = '';
 let userParams = [];
 
-// 1. POST /run-<algorithm>
 app.post('/run-:algorithm', (req, res) => {
   const { algorithm } = req.params;
   lastChoice = algorithm;
@@ -23,7 +22,6 @@ app.post('/run-:algorithm', (req, res) => {
   startProcess();
 });
 
-// 2. SSE endpoint
 app.get('/stream', (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
@@ -45,7 +43,7 @@ app.get('/pseudocode/:algorithm', (req, res) => {
   }
 });
 
-// 3. Launch backend executable
+
 function startProcess() {
   if (!lastChoice) return;
 

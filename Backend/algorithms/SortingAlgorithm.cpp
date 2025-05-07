@@ -9,7 +9,7 @@ using namespace std;
 void printStep(const vector<int>& arr, const string& message, int depth, int position, const string& action, int pivotIndex = -1, int swapA = -1, int swapB = -1) {
     cout << "{";
     cout << "\"array\": [";
-    for (size_t i = 0; i < arr.size(); ++i) {
+    for (int i = 0; i < arr.size(); ++i) {
         cout << arr[i];
         if (i < arr.size() - 1) cout << ", ";
     }
@@ -93,17 +93,14 @@ void bubbleSort(vector<int>& arr) {
     int n = arr.size();
     for (int i = 0; i < n - 1; ++i) {
         for (int j = 0; j < n - i - 1; ++j) {
-            // Step: compare
             printStep(arr, "Comparing " + to_string(arr[j]) + " and " + to_string(arr[j + 1]),
                       1, i * n + j, "compare", -1, j, j + 1);
 
             if (arr[j] > arr[j + 1]) {
                 swap(arr[j], arr[j + 1]);
-                // Step: swap
                 printStep(arr, "Swapping " + to_string(arr[j]) + " and " + to_string(arr[j + 1]),
                           1, i * n + j, "swap", -1, j, j + 1);
             } else {
-                // Step: no swap
                 printStep(arr, "No swap needed", 1, i * n + j, "no-swap", -1, j, j + 1);
             }
         }
@@ -127,7 +124,6 @@ void selectionSort(vector<int>& arr) {
         }
     }
 }
-
 void insertionSort(vector<int>& arr) {
     int n = arr.size();
     for (int i = 1; i < n; ++i) {

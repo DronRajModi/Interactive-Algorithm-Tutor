@@ -10,9 +10,9 @@ void logStep(const vector<vector<int>>& graph, const vector<int>& path, int vert
     cout << "\"message\":\"" << message << "\", ";
     cout << "\"graph\":[";
 
-    for (size_t i = 0; i < graph.size(); ++i) {
+    for (int i = 0; i < graph.size(); ++i) {
         cout << "[";
-        for (size_t j = 0; j < graph[i].size(); ++j) {
+        for (int j = 0; j < graph[i].size(); ++j) {
             cout << graph[i][j];
             if (j != graph[i].size() - 1) cout << ", ";
         }
@@ -21,7 +21,7 @@ void logStep(const vector<vector<int>>& graph, const vector<int>& path, int vert
     }
 
     cout << "], \"path\": [";
-    for (size_t i = 0; i < path.size(); ++i) {
+    for (int i = 0; i < path.size(); ++i) {
         cout << path[i];
         if (i != path.size() - 1) cout << ", ";
     }
@@ -38,7 +38,7 @@ bool isSafe(int v, const vector<vector<int>>& graph, const vector<int>& path, in
 bool hamCycleUtil(const vector<vector<int>>& graph, vector<int>& path, int pos) {
     if (pos == graph.size()) {
         if (graph[path[pos - 1]][path[0]] == 1) {
-            logStep(graph, path, -1, "✅ Hamiltonian Cycle found");
+            logStep(graph, path, -1, " Hamiltonian Cycle found");
             return true;
         } else {
             logStep(graph, path, -1, "No cycle, backtracking");
@@ -69,14 +69,21 @@ void findHamiltonianCycle(const vector<vector<int>>& graph) {
 
 int main(int argc, char* argv[]) {
     vector<vector<int>> graph = {
-        {0, 1, 0, 1},
-        {1, 0, 1, 1},
-        {0, 1, 0, 1},
-        {1, 1, 1, 0}
+        // {0, 1, 0, 1},
+        // {1, 0, 1, 1},
+        // {0, 1, 0, 1},
+        // {1, 1, 1, 0},
+        {0, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 0, 1, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 0, 1, 1, 1, 1, 1, 1, 1},
+        {1, 1, 1, 0, 1, 1, 1, 1, 1, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+       
+        
     };
-
+    
     if (argc > 1) {
-        // If graph input is provided, you can handle it here, but it's not covered in this example
     }
 
     findHamiltonianCycle(graph);
