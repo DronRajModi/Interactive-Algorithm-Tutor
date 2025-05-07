@@ -177,7 +177,7 @@ export default function BacktrackingVisualizer() {
             </div>
 
             <div className="flex gap-6 items-start">
-                {/* Board & Message */}
+        
                 <div className="flex-1">
                     <div className="text-center">
                         <h3 className="text-sm text-gray-500">Step {currentStepIndex + 1} of {steps.length}</h3>
@@ -200,7 +200,7 @@ export default function BacktrackingVisualizer() {
                         <div className="max-h-[400px] overflow-y-auto border rounded p-2 bg-gray-50 mt-4">
                             {finalBoard && currentStepIndex === steps.length - 1 && (
                                 <div className="text-center mb-4 ">
-                                    <h3 className="text-lg font-semibold text-green-600 mb-2">✅ Final Solution</h3>
+                                    <h3 className="text-lg font-semibold text-green-600 mb-2"> Final Solution</h3>
                                     {renderBoard(finalBoard)}
                                 </div>
                             )}

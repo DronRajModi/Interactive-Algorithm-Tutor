@@ -58,10 +58,10 @@ function startProcess() {
       exePath = path.join(algoDir, 'fibonacci.exe');
       args = userParams.map(String);
       break;
-      case 'dp-knapsack':
-        exePath = path.join(algoDir, 'knapsack.exe');
-        args = userParams.map(String);
-        break;
+    case 'dp-knapsack':
+      exePath = path.join(algoDir, 'knapsack.exe');
+      args = userParams.map(String);
+      break;
     case 'greedy':
       exePath = path.join(algoDir, 'Greedy.exe');
       args = userParams.map(String);
@@ -92,6 +92,11 @@ function startProcess() {
       exePath = path.join(algoDir, 'Greedy.exe');
       args = ['prims', ...userParams.map(String)];
       break;
+    case 'hamiltonian_cycle':
+      exePath = path.join(algoDir, 'hamiltonian_cycle.exe');
+      args = userParams.map(String);
+      break;
+
     default:
       // Generic algorithms
       exePath = path.join(algoDir, 'SortingAlgorithm.exe');

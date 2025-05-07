@@ -19,11 +19,11 @@ export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
     ],
     "Backtracking": [
       { name: "N-Queen", value: "nqueen" },
+      { name: "Hamiltonian Cycle", value: "hamiltonian_cycle" },
     ],
     "Greedy": [
       { name: "Dijkstra's Algorithm", value: "dijkstra" },
       { name: "Prim's Algorithm", value: "prims" },
-      { name: "Hamiltonian Cycle", value: "hamiltonian_cycle" },
       {name: "Kruskal's Algorithm", value: "kruskal" },
     ],
     "String Algorithms": [

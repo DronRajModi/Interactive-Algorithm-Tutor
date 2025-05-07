@@ -178,7 +178,7 @@ export default function Visualizer({ selectedAlgorithm }) {
           {currentStep?.action === 'final' && (
             <div className="mt-6 border rounded shadow-md bg-white max-h-[400px] overflow-y-auto p-4 w-full">
               <h3 className="text-lg font-semibold mb-2 text-center text-green-700">
-                ✅ Final Sorted Array
+                 Final Sorted Array
               </h3>
               <div className="flex justify-center flex-wrap gap-2 mb-4">
                 {currentStep.array.map((v, i) => (
@@ -187,7 +187,7 @@ export default function Visualizer({ selectedAlgorithm }) {
                   </div>
                 ))}
               </div>
-              <h4 className="text-md font-semibold mb-2 text-gray-700 text-center">📜 Step History</h4>
+              <h4 className="text-md font-semibold mb-2 text-gray-700 text-center"> Step History</h4>
               <div className="space-y-4">
                 {steps.map((step, idx) => (
                   <div key={idx} className="flex flex-col items-center">
