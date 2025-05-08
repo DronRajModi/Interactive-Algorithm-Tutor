@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 
-export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
+export default function Sidebar() {
   const [openCategory, setOpenCategory] = useState(null);
+  const navigate = useNavigate();
+  const { algorithm: selectedAlgorithm } = useParams() || {};
 
   const categories = {
     "Sorting Algorithm": [
@@ -24,13 +27,12 @@ export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
     "Greedy": [
       { name: "Dijkstra's Algorithm", value: "dijkstra" },
       { name: "Prim's Algorithm", value: "prims" },
-      {name: "Kruskal's Algorithm", value: "kruskal" },
+      { name: "Kruskal's Algorithm", value: "kruskal" },
     ],
     "String Algorithms": [
       { name: "KMP", value: "string-kmp" },
       { name: "Rabin-Karp", value: "string-rabin" },
     ],
-   
   };
 
   const toggleCategory = (cat) =>
@@ -38,7 +40,7 @@ export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
 
   return (
     <div className="w-64 bg-gray-800 text-white min-h-screen p-4 space-y-4">
-      {Object.keys(categories).map((category) => (
+      {Object.entries(categories).map(([category, algos]) => (
         <div key={category}>
           <button
             onClick={() => toggleCategory(category)}
@@ -46,19 +48,20 @@ export default function Sidebar({ onAlgorithmSelect, selectedAlgorithm }) {
           >
             {category}
           </button>
+
           {openCategory === category && (
             <div className="pl-4 space-y-2">
-              {categories[category].map((algo) => (
+              {algos.map(({ name, value }) => (
                 <button
-                  key={algo.value}
-                  onClick={() => onAlgorithmSelect(algo.value)}
+                  key={value}
+                  onClick={() => navigate(`/visualizer/${value}`)}
                   className={`block w-full text-left py-1 px-2 rounded text-sm ${
-                    selectedAlgorithm === algo.value
+                    selectedAlgorithm === value
                       ? 'bg-blue-600'
                       : 'hover:bg-gray-600'
                   }`}
                 >
-                  {algo.name}
+                  {name}
                 </button>
               ))}
             </div>

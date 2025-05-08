@@ -12,7 +12,7 @@ export default function Visualizer({ selectedAlgorithm }) {
   const [pseudocode, setPseudocode] = useState([]);  // State for pseudocode
 
   useEffect(() => {
-    // Fetch pseudocode when selectedAlgorithm changes
+    
     const fetchPseudocode = async () => {
       try {
         const response = await fetch(`http://localhost:5000/pseudocode/${selectedAlgorithm}`);
@@ -29,9 +29,9 @@ export default function Visualizer({ selectedAlgorithm }) {
     };
 
     if (selectedAlgorithm) {
-      fetchPseudocode();  // Fetch pseudocode when the algorithm is selected
+      fetchPseudocode();  
     }
-  }, [selectedAlgorithm]);  // Trigger whenever selectedAlgorithm changes
+  }, [selectedAlgorithm]);  
 
   useEffect(() => {
     if (isPlaying && currentIndex < steps.length - 1) {
@@ -206,10 +206,10 @@ export default function Visualizer({ selectedAlgorithm }) {
               </div>
             </div>
           )}
-        </div>
+        </div>        
 
         {/* Pseudocode */}
-        <PseudocodePanel pseudocodeLines={pseudocode} currentLine={currentLine} />
+<PseudocodePanel pseudocodeLines={pseudocode} currentLine={currentLine} />
       </div>
     </div>
   );

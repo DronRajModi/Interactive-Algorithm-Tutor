@@ -1,22 +1,21 @@
 export default function PseudocodePanel({ pseudocodeLines, currentLine }) {
-    return (
-      <div className="min-w-[250px] max-w-[300px] border rounded p-4 shadow bg-white h-fit">
-        <h3 className="text-lg font-semibold mb-4">Pseudocode</h3>
-        <div className="space-y-2">
-          {pseudocodeLines.map((line, index) => (
-            <div
-              key={index}
-              className={`px-2 py-1 rounded ${
-                currentLine === index
-                  ? 'bg-yellow-200 border-l-4 border-yellow-500 font-semibold'
-                  : ''
-              }`}
-            >
-              {line}
-            </div>
-          ))}
-        </div>
+  return (
+    <div className="min-w-[250px] max-w-[300px] border border-gray-200 rounded-lg p-4 shadow bg-gray-50 h-fit">
+      <h3 className="text-xl font-bold mb-3 text-gray-800">Pseudocode</h3>
+      <div className="space-y-1 max-h-[400px] overflow-y-auto">
+        {pseudocodeLines.map((line, index) => (
+          <pre
+            key={index}
+            className={`whitespace-pre-wrap text-sm font-mono px-3 py-1 rounded transition-colors duration-200 ${
+              currentLine === index
+                ? 'bg-blue-100 border-l-4 border-blue-500 text-blue-800'
+                : 'hover:bg-gray-100'
+            }`}
+          >
+            {line}
+          </pre>
+        ))}
       </div>
-    );
-  }
-  
+    </div>
+  );
+}
