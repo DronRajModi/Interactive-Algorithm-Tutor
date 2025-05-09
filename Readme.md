@@ -64,7 +64,7 @@ Here are some previews of the visualizations available in the app:
 First, fork this repo and then clone it:
 
 ```bash
-git clone https://github.com/your-username/Interactive-Algorithm-Tutor.git
+git clone https://github.com/Ayansh0209/Interactive-Algorithm-Tutor.git
 cd Interactive-Algorithm-Tutor
 
 # Install backend dependencies
